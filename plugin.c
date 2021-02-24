@@ -1149,10 +1149,42 @@ void storeData()
 fprintf(file, "%s", overWrite);
 */
 						
+int DisplayResourceNAMessageBox(int darklight) {
+	char message[200];
 
+	strcpy(message, "Please restart TeamSpeak for ");
+
+	if (darklight == 1) {
+		strcat(message, "DarkMode to initialize");
+	}
+	else {
+		strcat(message, "LightMode to initialize");
+	}
+
+	int msgboxID = MessageBox(NULL, (message), "ColorProfiler",
+		MB_ICONWARNING | MB_OKCANCEL | MB_DEFBUTTON2
+	);
+
+	switch (msgboxID)
+	{
+		case IDCANCEL:
+			// TODO: add code
+			break;
+		case IDOK:
+			system("start ts3client_win64.exe");
+			exit(0);
+			break;
+	}
+
+	return msgboxID;
+	
+}
 
 void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenuType type, int menuItemID, uint64 selectedItemID) {
 	printf("PLUGIN: onMenuItemEvent: serverConnectionHandlerID=%llu, type=%d, menuItemID=%d, selectedItemID=%llu\n", (long long unsigned int)serverConnectionHandlerID, type, menuItemID, (long long unsigned int)selectedItemID);
+
+	
+
 	switch (type) {
 	case PLUGIN_MENU_TYPE_GLOBAL:
 		/* Global menu item was triggered. selectedItemID is unused and set to zero. */
@@ -1172,9 +1204,10 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 
 				fprintf(file, "%s", overWrite);
 
-
+				
 				fclose(file);
-				MessageBox(NULL, ("Please restart TeamSpeak for DarkMode to initialize!"), "ColorProfiler", MB_ICONINFORMATION);
+				DisplayResourceNAMessageBox(1);
+				
 			}
 			
 
@@ -1196,7 +1229,7 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 
 
 				fclose(file);
-				MessageBox(NULL, ("Please restart TeamSpeak for LightMode to initialize!"), "ColorProfiler", MB_ICONINFORMATION);
+				DisplayResourceNAMessageBox(2);
 
 				break;
 			}
