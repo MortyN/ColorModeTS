@@ -9,6 +9,7 @@ public:
 	//init window
 	bool init();
 	bool broadcast();
+	int gettext(const char* input);
 	//release window
 	bool release();
 	bool isRun();

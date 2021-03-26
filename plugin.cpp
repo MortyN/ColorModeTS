@@ -99,6 +99,7 @@ const char* ts3plugin_version() {
 /* Plugin API version. Must be the same as the clients API major version, else the plugin fails to load. */
 int ts3plugin_apiVersion() {
 	return PLUGIN_API_VERSION;
+
 }
 
 /* Plugin author */
@@ -1206,6 +1207,11 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 
 	AppWindow app;
 	
+	Window* win;
+
+	//passing variables to gettext in window.cpp
+	win->gettext("hei dette er en test!");
+
 	 
 	printf("PLUGIN: onMenuItemEvent: serverConnectionHandlerID=%llu, type=%d, menuItemID=%d, selectedItemID=%llu\n", (long long unsigned int)serverConnectionHandlerID, type, menuItemID, (long long unsigned int)selectedItemID);
 
@@ -1240,7 +1246,7 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 			/* Menu global 2 was triggered */
 
 			
-
+			
 
 			if (file == NULL) {
 				MessageBox(NULL, ("file doesnt exist"), "Display", MB_ICONINFORMATION);
@@ -1260,7 +1266,6 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 
 		case MENU_ID_GLOBAL_3:
 			/* Menu global 2 was triggered */
-			
 			if (app.init())
 			{
 				while (app.isRun()) {
