@@ -15,12 +15,21 @@
     <Filter Include="Header Files\teamlog">
       <UniqueIdentifier>{d76dfa87-907d-4936-a5cf-59462dba95d7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{0e4dbfe4-06cc-4cd2-93d9-f11202363701}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="appwindow">
+      <UniqueIdentifier>{3c1368be-0767-4824-9147-c52a45742725}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="plugin.c">
+    <ClCompile Include="plugin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source.cpp">
+    <ClCompile Include="Window.cpp">
+      <Filter>appwindow</Filter>
+    </ClCompile>
+    <ClCompile Include="AppWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -52,5 +61,14 @@
     <ClInclude Include="..\include\plugin_definitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Window.h">
+      <Filter>appwindow</Filter>
+    </ClInclude>
+    <ClInclude Include="AppWindow.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="test_plugin.rc" />
   </ItemGroup>
 </Project>

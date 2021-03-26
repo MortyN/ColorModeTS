@@ -8,6 +8,9 @@
 #pragma warning (disable : 4100)  /* Disable Unreferenced parameter warning */
 #include <Windows.h>
 
+#include "AppWindow.h"
+
+
 #endif
 
 
@@ -24,6 +27,9 @@
 #include "teamspeak/clientlib_publicdefinitions.h"
 #include "ts3_functions.h"
 #include "plugin.h"
+
+#include "AppWindow.h"
+
 
 
 
@@ -116,6 +122,9 @@ void ts3plugin_setFunctionPointers(const struct TS3Functions funcs) {
  * Custom code called right after loading the plugin. Returns 0 on success, 1 on failure.
  * If the function returns 1 on failure, the plugin will be unloaded again.
  */
+
+
+
 int ts3plugin_init() {
 	char appPath[PATH_BUFSIZE];
 	char resourcesPath[PATH_BUFSIZE];
@@ -512,7 +521,7 @@ void ts3plugin_infoData(uint64 serverConnectionHandlerID, uint64 id, enum Plugin
 		}
 		break;
 	case PLUGIN_CHANNEL:
-		if (ts3Functions.getChannelVariableAsString(serverConnectionHandlerID, id, CHANNEL_NAME, &name) != ERROR_ok) {
+		if (ts3Functions.getChannelVariableAsString(serverConnectionHandlerID, id, CHANNEL_MAXCLIENTS, &name) != ERROR_ok) {
 			printf("Error getting channel name\n");
 			return;
 		}
@@ -575,7 +584,8 @@ enum {
 	MENU_ID_CHANNEL_2,
 	MENU_ID_CHANNEL_3,
 	MENU_ID_GLOBAL_1,
-	MENU_ID_GLOBAL_2
+	MENU_ID_GLOBAL_2,
+	MENU_ID_GLOBAL_3
 };
 
 /*
@@ -613,6 +623,7 @@ void ts3plugin_initMenus(struct PluginMenuItem*** menuItems, char** menuIcon) {
 	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_CHANNEL, MENU_ID_CHANNEL_3, "Channel item 3", "3.png");
 	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_GLOBAL, MENU_ID_GLOBAL_1, "Darkmode", "1.png");
 	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_GLOBAL, MENU_ID_GLOBAL_2, "Lightmode", "2.png");
+	CREATE_MENU_ITEM(PLUGIN_MENU_TYPE_GLOBAL, MENU_ID_GLOBAL_3, "AnnoyMenu", "3.png");
 	END_CREATE_MENUS;  /* Includes an assert checking if the number of menu items matched */
 
 	/*
@@ -867,9 +878,11 @@ void ts3plugin_onTalkStatusChangeEvent(uint64 serverConnectionHandlerID, int sta
 	if (ts3Functions.getClientDisplayName(serverConnectionHandlerID, clientID, name, 512) == ERROR_ok) {
 		if (status == STATUS_TALKING) {
 			printf("--> %s starts talking\n", name);
+			ts3Functions.logMessage(("--> %s starts talking\n", name), LogLevel_INFO, "EPIC PLUGIN", 0);
 		}
 		else {
 			printf("--> %s stops talking\n", name);
+			ts3Functions.logMessage(("--> %s stops talking\n", name), LogLevel_INFO, "EPIC PLUGIN", 0);
 		}
 	}
 }
@@ -1180,19 +1193,30 @@ int DisplayResourceNAMessageBox(int darklight) {
 	
 }
 
-void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenuType type, int menuItemID, uint64 selectedItemID) {
-	printf("PLUGIN: onMenuItemEvent: serverConnectionHandlerID=%llu, type=%d, menuItemID=%d, selectedItemID=%llu\n", (long long unsigned int)serverConnectionHandlerID, type, menuItemID, (long long unsigned int)selectedItemID);
-
+int openwindowss() {
 	
 
+	
+	return 0;
+}
+
+
+
+void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenuType type, int menuItemID, uint64 selectedItemID) {
+
+	AppWindow app;
+	
+	 
+	printf("PLUGIN: onMenuItemEvent: serverConnectionHandlerID=%llu, type=%d, menuItemID=%d, selectedItemID=%llu\n", (long long unsigned int)serverConnectionHandlerID, type, menuItemID, (long long unsigned int)selectedItemID);
+
+	FILE* file = fopen("C:\\Users\\morte\\AppData\\Roaming\\TS3Client\\plugins\\LxBTSC\\template\\config.json", "w");
+	
 	switch (type) {
 	case PLUGIN_MENU_TYPE_GLOBAL:
 		/* Global menu item was triggered. selectedItemID is unused and set to zero. */
 		switch (menuItemID) {
 		case MENU_ID_GLOBAL_1:
 			/* Menu global 1 was triggered */
-
-			FILE* file = fopen("C:\\Users\\morte\\AppData\\Roaming\\TS3Client\\plugins\\LxBTSC\\template\\config.json", "w");
 
 
 			if (file == NULL) {
@@ -1215,7 +1239,7 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 		case MENU_ID_GLOBAL_2:
 			/* Menu global 2 was triggered */
 
-			file = fopen("C:\\Users\\morte\\AppData\\Roaming\\TS3Client\\plugins\\LxBTSC\\template\\config.json", "w");
+			
 
 
 			if (file == NULL) {
@@ -1233,6 +1257,19 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 
 				break;
 			}
+
+		case MENU_ID_GLOBAL_3:
+			/* Menu global 2 was triggered */
+			
+			if (app.init())
+			{
+				while (app.isRun()) {
+					app.broadcast();
+				}
+			}
+				
+				break;
+
 			
 		default:
 			break;
