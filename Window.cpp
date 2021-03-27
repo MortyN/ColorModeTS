@@ -34,6 +34,8 @@ int userIds[30];
 
 /* Possible object to pass information!
 
+https://stackoverflow.com/questions/31964211/how-to-access-a-struct-from-another-another-c-class
+
 struct tsuser {
 	char username[512];
 	int clientid;
