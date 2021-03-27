@@ -10,6 +10,7 @@
 #include "teamspeak/clientlib_publicdefinitions.h"
 #include "ts3_functions.h"
 #include "plugin.h"
+#include "AppWindow.h"
 
 
 #define IDI_ICON         101
@@ -24,6 +25,7 @@ Window::Window()
 }
 void AddControls(HWND);
 HWND hWndListBox;
+AppWindow app;
 
 
 /*std::string tsUser[];*/
@@ -67,19 +69,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 			(HINSTANCE)GetWindowLong(hwnd, GWLP_HINSTANCE),
 
 			NULL);
-		char buf[16];
-		sprintf(buf, "%d", userIds[0]);
-		printf("%d", userIds[0]);
-		printf("EPISK TALL!!!! %s", buf);
 
+		char buf[30];
+		for (int i = 0; userIds[i]; i++)
+		{
+			sprintf(buf, "%d", userIds[i]);
 			SendMessage(GetDlgItem(hwnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)buf);
-
-			
-
-
-
-
-
+		}
+		
 		break;
 	}
 
@@ -151,6 +148,14 @@ int Window::gettext(int ids[])
 		printf("ADDED TO LIST: %d \n", userIds[i]);
 	}
 
+	if (app.init())
+	{
+
+		while (app.isRun()) {
+			app.broadcast();
+		}
+	}
+	printf("RETURNED NANI!??");
 	return 0;
 }
 

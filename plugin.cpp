@@ -13,7 +13,6 @@
 
 #endif
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1239,7 +1238,7 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 		printf("first id: %d", cId[i]);
 	}
 
-	AppWindow app;
+	
 
 	Window* win;
 
@@ -1297,14 +1296,8 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 
 		case MENU_ID_GLOBAL_3:
 			/* Menu global 3 was triggered */
+			win->gettext(cId);
 			
-			if (app.init())
-			{
-				win->gettext(cId);
-				while (app.isRun()) {
-					app.broadcast();
-				}
-			}
 				
 				break;
 
