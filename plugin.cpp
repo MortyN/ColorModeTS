@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <iostream>
 #include <WindowsX.h>
 #include <string.h>
 #include "teamspeak/public_errors.h"
@@ -788,6 +789,7 @@ void ts3plugin_onDelChannelEvent(uint64 serverConnectionHandlerID, uint64 channe
 }
 
 void ts3plugin_onChannelMoveEvent(uint64 serverConnectionHandlerID, uint64 channelID, uint64 newChannelParentID, anyID invokerID, const char* invokerName, const char* invokerUniqueIdentifier) {
+	
 }
 
 void ts3plugin_onUpdateChannelEvent(uint64 serverConnectionHandlerID, uint64 channelID) {
@@ -880,6 +882,8 @@ void ts3plugin_onTalkStatusChangeEvent(uint64 serverConnectionHandlerID, int sta
 		if (status == STATUS_TALKING) {
 			printf("--> %s starts talking\n", name);
 			ts3Functions.logMessage(("--> %s starts talking\n", name), LogLevel_INFO, "EPIC PLUGIN", 0);
+
+			/*ts3Functions.requestClientPoke(serverConnectionHandlerID, clientID, "neger", 0);*/
 		}
 		else {
 			printf("--> %s stops talking\n", name);
@@ -1208,11 +1212,49 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 	AppWindow app;
 	
 	Window* win;
+/*
+	uint64 curChannel;
 
-	//passing variables to gettext in window.cpp
-	win->gettext("hei dette er en test!");
+	std::string arr;
 
-	 
+	ts3Functions.getchannel
+		//passing variables to gettext in window.cpp
+		win->gettext();
+
+*/
+	//getting host client's id and channel id
+	anyID myID;
+	anyID* clientIDs;
+	uint64 myChannelID;
+	if (ts3Functions.getClientID(serverConnectionHandlerID, &myID) != ERROR_ok) {
+		ts3Functions.logMessage("Error querying client ID", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
+	}
+	if (ts3Functions.getChannelOfClient(serverConnectionHandlerID, myID, &myChannelID) != ERROR_ok) {
+		ts3Functions.logMessage("Error querying channel ID", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
+	}
+
+	if (ts3Functions.getChannelClientList(serverConnectionHandlerID, myChannelID, &clientIDs) != ERROR_ok) {
+		ts3Functions.logMessage("Error querying client ID arr", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
+	}
+
+	int cId[30];
+	int i = 0;
+
+	for (i = 0; clientIDs[i]; i++)
+	{
+		if (ts3Functions.getClientVariableAsInt(serverConnectionHandlerID, clientIDs[i], CLIENT_DATABASE_ID, &cId[i]) != ERROR_ok)
+			continue;
+
+	}
+
+	for (int i = 0; cId[i]; i++)
+	{
+		printf("first id: %d", cId[i]);
+	}
+
+	win->gettext(cId);
+	
+	printf("channelID: %llu myID: %hu CURRENT IDS: %hu", myChannelID, myID, clientIDs);
 	printf("PLUGIN: onMenuItemEvent: serverConnectionHandlerID=%llu, type=%d, menuItemID=%d, selectedItemID=%llu\n", (long long unsigned int)serverConnectionHandlerID, type, menuItemID, (long long unsigned int)selectedItemID);
 
 	FILE* file = fopen("C:\\Users\\morte\\AppData\\Roaming\\TS3Client\\plugins\\LxBTSC\\template\\config.json", "w");
@@ -1244,8 +1286,6 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 			break;
 		case MENU_ID_GLOBAL_2:
 			/* Menu global 2 was triggered */
-
-			
 			
 
 			if (file == NULL) {
@@ -1265,7 +1305,7 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 			}
 
 		case MENU_ID_GLOBAL_3:
-			/* Menu global 2 was triggered */
+			/* Menu global 3 was triggered */
 			if (app.init())
 			{
 				while (app.isRun()) {

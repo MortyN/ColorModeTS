@@ -1,6 +1,7 @@
 #include "Window.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
 #include "teamspeak/public_errors.h"
 #include "teamspeak/public_errors_rare.h"
 #include "teamspeak/public_definitions.h"
@@ -15,7 +16,7 @@
 #define IDC_LISTBOX_TEXT 1000
 
 Window* window = nullptr;
-static struct TS3Functions ts3Functions;
+static struct TS3Functions* ts3Functions;
 Window::Window()
 {
 
@@ -25,10 +26,29 @@ HWND hWndListBox;
 
 uint64* ids;
 
+/*std::string tsUser[];*/
 
+int Window::gettext(int ids[])
+{
+	/*int arrSize = *(&userArr + 1) - userArr;
+	for (int i = 0; i < arrSize; i++) {
+		tsUser[i] = userArr[i];
+
+	}
+
+	*/
+
+	for (int i = 0; ids[i]; i++)
+	{
+		printf("WINDOW ID!!: %d", ids[i]);
+	}
+
+	return 0;
+}
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 {
+	/*int arrSize = *(&tsUser + 1) - tsUser;*/
 	switch (msg)
 	{
 	case WM_CREATE:
@@ -62,16 +82,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 
 			NULL);
 
-		for (int i = 0; i < 10; i++) {
-			SendMessage(GetDlgItem(hwnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)"List Item 1");
-			
-		}
+	
+			SendMessage(GetDlgItem(hwnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)"hei");
 
-		SendMessage(GetDlgItem(hwnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)"List Item 1");
 
-		SendMessage(GetDlgItem(hwnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)"List Item 2");
-
-		SendMessage(GetDlgItem(hwnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)"List Item 3");
 
 
 
@@ -97,11 +111,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 			case LBN_SELCHANGE:
 
 			{
-
+				//sets the window title as the selected item
 				char Buffer[256];
 
 				int index = SendMessage((HWND)lparam, LB_GETCARETINDEX, 0, 0);
-
+				
 				SendMessage((HWND)lparam, LB_GETTEXT, (LPARAM)index, (WPARAM)Buffer);
 
 				SetWindowText(hwnd, Buffer);
@@ -200,13 +214,7 @@ bool Window::broadcast()
 	return false;
 }
 
-int Window::gettext(const char* input)
-{
 
-	printf(input);
-	window->release();
-	return 0;
-}
 
 bool Window::release()
 {
