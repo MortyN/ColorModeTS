@@ -32,6 +32,25 @@ AppWindow app;
 
 int userIds[30];
 
+/* Possible object to pass information!
+
+struct tsuser {
+	char username[512];
+	int clientid;
+};
+
+struct tsuser arr[3] = { {"haks", 32},{"grea", 55},{"dsada", 41} };
+
+for (int i = 0; i < 3; i++) {
+	printf("%d %s \n", arr[i].clientid, arr[i].username);
+}
+
+*/
+
+
+
+
+
 
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)

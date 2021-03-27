@@ -3,6 +3,8 @@
 
 class AppWindow: public Window
 {
+
+
 public:
 	AppWindow();
 	~AppWindow();
