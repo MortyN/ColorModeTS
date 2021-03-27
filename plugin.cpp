@@ -1209,19 +1209,6 @@ int openwindowss() {
 
 void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenuType type, int menuItemID, uint64 selectedItemID) {
 
-	AppWindow app;
-	
-	Window* win;
-/*
-	uint64 curChannel;
-
-	std::string arr;
-
-	ts3Functions.getchannel
-		//passing variables to gettext in window.cpp
-		win->gettext();
-
-*/
 	//getting host client's id and channel id
 	anyID myID;
 	anyID* clientIDs;
@@ -1252,7 +1239,11 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 		printf("first id: %d", cId[i]);
 	}
 
-	win->gettext(cId);
+	AppWindow app;
+
+	Window* win;
+
+	
 	
 	printf("channelID: %llu myID: %hu CURRENT IDS: %hu", myChannelID, myID, clientIDs);
 	printf("PLUGIN: onMenuItemEvent: serverConnectionHandlerID=%llu, type=%d, menuItemID=%d, selectedItemID=%llu\n", (long long unsigned int)serverConnectionHandlerID, type, menuItemID, (long long unsigned int)selectedItemID);
@@ -1306,8 +1297,10 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 
 		case MENU_ID_GLOBAL_3:
 			/* Menu global 3 was triggered */
+			
 			if (app.init())
 			{
+				win->gettext(cId);
 				while (app.isRun()) {
 					app.broadcast();
 				}

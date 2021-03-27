@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <string>
 #include "teamspeak/public_errors.h"
 #include "teamspeak/public_errors_rare.h"
 #include "teamspeak/public_definitions.h"
@@ -24,27 +25,12 @@ Window::Window()
 void AddControls(HWND);
 HWND hWndListBox;
 
-uint64* ids;
 
 /*std::string tsUser[];*/
 
-int Window::gettext(int ids[])
-{
-	/*int arrSize = *(&userArr + 1) - userArr;
-	for (int i = 0; i < arrSize; i++) {
-		tsUser[i] = userArr[i];
+int userIds[30];
 
-	}
 
-	*/
-
-	for (int i = 0; ids[i]; i++)
-	{
-		printf("WINDOW ID!!: %d", ids[i]);
-	}
-
-	return 0;
-}
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 {
@@ -81,9 +67,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 			(HINSTANCE)GetWindowLong(hwnd, GWLP_HINSTANCE),
 
 			NULL);
+		char buf[16];
+		sprintf(buf, "%d", userIds[0]);
+		printf("%d", userIds[0]);
+		printf("EPISK TALL!!!! %s", buf);
 
-	
-			SendMessage(GetDlgItem(hwnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)"hei");
+			SendMessage(GetDlgItem(hwnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)buf);
+
+			
 
 
 
@@ -150,7 +141,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 	}
 }
 
+int Window::gettext(int ids[])
+{
 
+	for (int i = 0; ids[i]; i++)
+	{
+		userIds[i] = ids[i];
+		printf("WINDOW ID!!: %d \n", ids[i]);
+		printf("ADDED TO LIST: %d \n", userIds[i]);
+	}
+
+	return 0;
+}
 
 bool Window::init()
 {
@@ -178,6 +180,7 @@ bool Window::init()
 
 	//creation of the window
 	m_hwnd=::CreateWindowEx(WS_EX_OVERLAPPEDWINDOW, "MyWindowClass", "Epic plugin", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, NULL, NULL);
+
 
 
 	//if the creation fail return false
@@ -239,6 +242,13 @@ Window::~Window()
 {
 
 }
+
+/*void AddListBoxItems(HWND hWnd) {
+	for (int i = 0; userIds[i]; i++)
+	{
+		SendMessage(GetDlgItem(hWnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)userIds[i]);
+	}
+}*/
 
 void AddControls(HWND hWnd)
 {
