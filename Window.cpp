@@ -24,6 +24,8 @@ Window::Window()
 
 }
 void AddControls(HWND);
+void UpdateList(HWND);
+HWND rightHwnd;
 HWND hWndListBox;
 AppWindow app;
 
@@ -32,6 +34,7 @@ AppWindow app;
 int lastUser;
 int userIds[30] = {};
 char *userNames[30] = {};
+bool isWinRun = false;
 
 struct UserObj winUserList[30];
 
@@ -173,6 +176,8 @@ bool Window::init()
 	//set this flag to true to indicate that the window is initialized and running
 	m_is_run = true;
 
+	isWinRun = true;
+
 	return true;
 }
 
@@ -191,6 +196,28 @@ bool Window::broadcast()
 	Sleep(0);
 
 	return false;
+}
+
+
+int Window::updateUserDetails(UserObj client[], int lastvalue)
+{
+	if (isWinRun) {
+		lastUser = lastvalue;
+
+		for (int i = 0; i < lastUser; i++)
+		{
+			winUserList[i] = client[i];
+			printf("UPDATED LIST!: %s\n", winUserList[i].username);
+		}
+		SendMessage(hWndListBox, LB_RESETCONTENT, 0, 0);
+		for (int i = 0; i < lastUser; i++)
+		{
+			SendMessage(GetDlgItem(rightHwnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)client[i].username);
+		}
+		::UpdateWindow(rightHwnd);
+	}
+		
+	return 0;
 }
 
 
@@ -228,7 +255,7 @@ Window::~Window()
 
 void AddControls(HWND hWnd)
 {
-
+	rightHwnd = hWnd;
 	CreateWindowW(L"Button", L"Click Me", WS_VISIBLE | WS_CHILD, 600, 100, 100, 50, hWnd, NULL, NULL, NULL);
 	
 }

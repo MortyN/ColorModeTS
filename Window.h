@@ -12,8 +12,8 @@ public:
 	//init window
 	bool init();
 	bool broadcast();
-	int gettext(int ids[], char *names[], uint64 serverConnectionHandlerID);
 	int getUserDetails(UserObj client[], int lastvalue);
+	int updateUserDetails(UserObj client[], int lastvalue);
 	//release window
 	bool release();
 	bool isRun();

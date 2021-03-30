@@ -56,6 +56,7 @@ static struct TS3Functions ts3Functions;
 #define RETURNCODE_BUFSIZE 128
 
 static char* pluginID = NULL;
+Window* win;
 
 #ifdef _WIN32
 /* Helper function to convert wchar_T to Utf-8 encoded strings on Windows */
@@ -803,6 +804,62 @@ void ts3plugin_onUpdateClientEvent(uint64 serverConnectionHandlerID, anyID clien
 }
 
 void ts3plugin_onClientMoveEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility, const char* moveMessage) {
+	//When client moves
+
+	anyID myUpdateID;
+	uint64 myChannelID;
+	
+
+	if (ts3Functions.getClientID(serverConnectionHandlerID, &myUpdateID) != ERROR_ok) {
+		ts3Functions.logMessage("Error querying client ID", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
+	}
+	if (ts3Functions.getChannelOfClient(serverConnectionHandlerID, myUpdateID, &myChannelID) != ERROR_ok) {
+		ts3Functions.logMessage("Error querying channel ID", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
+	}
+
+	if (oldChannelID == myChannelID || newChannelID == myChannelID) {
+		printf("SOMEONE LEFT OR JOINED MY CHANNEL!!!!");
+		
+		int cId[30];
+		char* userNames[30];
+		char* str;
+		anyID* clientIDs;
+		int userAmount = 0;
+		int i = 0;
+
+		struct UserObj arr[30] = { 0 };
+
+		if (ts3Functions.getChannelClientList(serverConnectionHandlerID, myChannelID, &clientIDs) != ERROR_ok) {
+			ts3Functions.logMessage("Error querying client ID arr", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
+		}
+
+
+		for (i = 0; clientIDs[i]; i++)
+		{
+			if (ts3Functions.getClientVariableAsInt(serverConnectionHandlerID, clientIDs[i], CLIENT_DATABASE_ID, &cId[i]) != ERROR_ok)
+			{
+				printf("Error getting client ID\n");
+			}
+			if (ts3Functions.getClientVariableAsString(serverConnectionHandlerID, (anyID)clientIDs[i], CLIENT_NICKNAME, &str) != ERROR_ok) {
+				printf("Error getting client nickname\n");
+				return;
+			}
+			else {
+
+				arr[i].clientid = cId[i];
+				arr[i].username = str;
+
+				printf("ID = %d NAME = %s\n", arr[i].clientid, arr[i].username);
+				userAmount++;
+			}
+
+
+		}
+		win->updateUserDetails(arr, userAmount);
+	}
+
+	
+
 }
 
 void ts3plugin_onClientMoveSubscriptionEvent(uint64 serverConnectionHandlerID, anyID clientID, uint64 oldChannelID, uint64 newChannelID, int visibility) {
@@ -1250,7 +1307,7 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 			//printf("UserName: %s %d\n", userNames[i], cId[i]);			
 
 			arr[i].clientid = cId[i];
-			arr[i].username = userNames[i];
+			arr[i].username = str;
 
 			printf("ID = %d NAME = %s\n", arr[i].clientid, arr[i].username);
 			userAmount++;
@@ -1258,8 +1315,6 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 
 		
 	}
-
-	Window* win;
 	
 	printf("channelID: %llu myID: %hu CURRENT IDS: %hu", myChannelID, myID, clientIDs);
 	printf("PLUGIN: onMenuItemEvent: serverConnectionHandlerID=%llu, type=%d, menuItemID=%d, selectedItemID=%llu\n", (long long unsigned int)serverConnectionHandlerID, type, menuItemID, (long long unsigned int)selectedItemID);
