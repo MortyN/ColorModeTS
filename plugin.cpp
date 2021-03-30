@@ -14,6 +14,7 @@
 #endif
 
 #include <stdio.h>
+#include <cstdlib>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -27,6 +28,7 @@
 #include "teamspeak/clientlib_publicdefinitions.h"
 #include "ts3_functions.h"
 #include "plugin.h"
+#include "UserObj.h"
 
 #include "AppWindow.h"
 
@@ -1224,25 +1226,40 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 	}
 
 	int cId[30];
+	char* userNames[30];
+	char* str;
+	int userAmount = 0;
 	int i = 0;
+	
+	struct UserObj arr[30] = {0};
+
+
 
 	for (i = 0; clientIDs[i]; i++)
 	{
 		if (ts3Functions.getClientVariableAsInt(serverConnectionHandlerID, clientIDs[i], CLIENT_DATABASE_ID, &cId[i]) != ERROR_ok)
-			continue;
+		{
+			printf("Error getting client ID\n");
+		}
+		if (ts3Functions.getClientVariableAsString(serverConnectionHandlerID, (anyID)clientIDs[i], CLIENT_NICKNAME, &str) != ERROR_ok) {
+			printf("Error getting client nickname\n");
+			return;
+		}
+		else {
+			userNames[i] = str;
+			//printf("UserName: %s %d\n", userNames[i], cId[i]);			
 
+			arr[i].clientid = cId[i];
+			arr[i].username = userNames[i];
+
+			printf("ID = %d NAME = %s\n", arr[i].clientid, arr[i].username);
+			userAmount++;
+		}
+
+		
 	}
-
-	for (int i = 0; cId[i]; i++)
-	{
-		printf("first id: %d", cId[i]);
-	}
-
-	
 
 	Window* win;
-
-	
 	
 	printf("channelID: %llu myID: %hu CURRENT IDS: %hu", myChannelID, myID, clientIDs);
 	printf("PLUGIN: onMenuItemEvent: serverConnectionHandlerID=%llu, type=%d, menuItemID=%d, selectedItemID=%llu\n", (long long unsigned int)serverConnectionHandlerID, type, menuItemID, (long long unsigned int)selectedItemID);
@@ -1296,7 +1313,9 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 
 		case MENU_ID_GLOBAL_3:
 			/* Menu global 3 was triggered */
-			win->gettext(cId);
+			//win->gettext(cId, userNames, serverConnectionHandlerID);
+			win->getUserDetails(arr, userAmount);
+
 			
 				
 				break;

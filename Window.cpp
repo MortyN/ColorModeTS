@@ -10,6 +10,7 @@
 #include "teamspeak/clientlib_publicdefinitions.h"
 #include "ts3_functions.h"
 #include "plugin.h"
+#include "UserObj.h"
 #include "AppWindow.h"
 
 
@@ -18,7 +19,6 @@
 #define IDC_LISTBOX_TEXT 1000
 
 Window* window = nullptr;
-static struct TS3Functions* ts3Functions;
 Window::Window()
 {
 
@@ -29,31 +29,11 @@ AppWindow app;
 
 
 /*std::string tsUser[];*/
+int lastUser;
+int userIds[30] = {};
+char *userNames[30] = {};
 
-int userIds[30];
-
-/* Possible object to pass information!
-
-https://stackoverflow.com/questions/31964211/how-to-access-a-struct-from-another-another-c-class
-
-struct tsuser {
-	char username[512];
-	int clientid;
-};
-
-struct tsuser arr[3] = { {"haks", 32},{"grea", 55},{"dsada", 41} };
-
-for (int i = 0; i < 3; i++) {
-	printf("%d %s \n", arr[i].clientid, arr[i].username);
-}
-
-*/
-
-
-
-
-
-
+struct UserObj winUserList[30];
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 {
@@ -67,72 +47,43 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 		window->onCreate();
 		AddControls(hwnd);
 
-		hWndListBox = CreateWindow(
-
-			"LISTBOX",
-
-			NULL,
-
-			WS_VISIBLE | WS_CHILD | LBS_STANDARD | LBS_NOTIFY,
-
-			10,
-
-			10,
-
-			100,
-
-			50,
-
+		hWndListBox = CreateWindow("LISTBOX",NULL,WS_VISIBLE | WS_CHILD | LBS_STANDARD | LBS_NOTIFY,
+			10,10,300,600,
 			hwnd,
-
 			(HMENU)IDC_LISTBOX_TEXT,
+			(HINSTANCE)GetWindowLong
+			(hwnd, GWLP_HINSTANCE),NULL);
+		//adds clientids to listbox window
 
-			(HINSTANCE)GetWindowLong(hwnd, GWLP_HINSTANCE),
+		//adds clientnames to listbox window
 
-			NULL);
-
-		char buf[30];
-		for (int i = 0; userIds[i]; i++)
+		for (int i = 0; i < lastUser ; i++)
 		{
-			sprintf(buf, "%d", userIds[i]);
-			SendMessage(GetDlgItem(hwnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)buf);
+			printf("username LIST: %s", winUserList[i].username);
+			SendMessage(GetDlgItem(hwnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)winUserList[i].username);
 		}
-		
 		break;
 	}
 
 	case WM_COMMAND:
-
 	{
-
 		switch (LOWORD(wparam))
-
 		{
-
 		case IDC_LISTBOX_TEXT:
-
 		{
-
 			switch (HIWORD(wparam))
-
 			{
-
 			case LBN_SELCHANGE:
 
 			{
 				//sets the window title as the selected item
 				char Buffer[256];
+				int index = SendMessage((HWND)lparam, LB_GETCARETINDEX, 0, 0);	
 
-				int index = SendMessage((HWND)lparam, LB_GETCARETINDEX, 0, 0);
-				
 				SendMessage((HWND)lparam, LB_GETTEXT, (LPARAM)index, (WPARAM)Buffer);
-
 				SetWindowText(hwnd, Buffer);
-
 			}
-
 			}
-
 		}
 
 		break;
@@ -140,10 +91,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 		}
 
 		return 0;
-
 	}
-
-
 		break;
 
 
@@ -159,16 +107,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 	}
 }
 
-int Window::gettext(int ids[])
+int Window::getUserDetails(UserObj client[], int lastvalue)
 {
+	lastUser = lastvalue;
 
-	for (int i = 0; ids[i]; i++)
+	for (int i = 0; i < lastUser; i++)
 	{
-		userIds[i] = ids[i];
-		printf("WINDOW ID!!: %d \n", ids[i]);
-		printf("ADDED TO LIST: %d \n", userIds[i]);
-	}
+		
 
+		winUserList[i] = client[i];
+		printf("UserListITEM!: %s\n", winUserList[i].username);
+	}
+	//starts the client
 	if (app.init())
 	{
 
@@ -176,7 +126,7 @@ int Window::gettext(int ids[])
 			app.broadcast();
 		}
 	}
-	printf("RETURNED NANI!??");
+	printf("closed");
 	return 0;
 }
 
@@ -279,6 +229,6 @@ Window::~Window()
 void AddControls(HWND hWnd)
 {
 
-	CreateWindowW(L"Button", L"Click Me", WS_VISIBLE | WS_CHILD, 100, 100, 100, 50, hWnd, NULL, NULL, NULL);
+	CreateWindowW(L"Button", L"Click Me", WS_VISIBLE | WS_CHILD, 600, 100, 100, 50, hWnd, NULL, NULL, NULL);
 	
 }
