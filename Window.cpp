@@ -13,10 +13,11 @@
 #include "UserObj.h"
 #include "AppWindow.h"
 
-
+//defining the wparam values for the msg switch-case
 #define IDI_ICON         101
-
 #define IDC_LISTBOX_TEXT 1000
+#define IDC_CHECKBOX_POKETALK 1001
+#define IDC_LISTBOXACTIVE_TEXT 1002
 
 Window* window = nullptr;
 Window::Window()
@@ -56,7 +57,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 			(HMENU)IDC_LISTBOX_TEXT,
 			(HINSTANCE)GetWindowLong
 			(hwnd, GWLP_HINSTANCE),NULL);
-		//adds clientids to listbox window
+
+		//creates checkbox
+		CreateWindow(TEXT("button"), TEXT("Activate Poke on Talk"),
+			WS_VISIBLE | WS_CHILD | BS_CHECKBOX,
+			700, 20, 185, 35,
+			hwnd, (HMENU)IDC_CHECKBOX_POKETALK, ((LPCREATESTRUCT)lparam)->hInstance, NULL);
+
+		//
 
 		//adds clientnames to listbox window
 
@@ -72,31 +80,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 	{
 		switch (LOWORD(wparam))
 		{
-		case IDC_LISTBOX_TEXT:
-		{
-			switch (HIWORD(wparam))
+			case IDC_LISTBOX_TEXT:
 			{
-			case LBN_SELCHANGE:
+				
+				switch (HIWORD(wparam))
+				{
+					case LBN_SELCHANGE:
+					{
+						//sets the window title as the selected item
+						char Buffer[256];
+						int index = SendMessage((HWND)lparam, LB_GETCARETINDEX, 0, 0);	
 
+						SendMessage((HWND)lparam, LB_GETTEXT, (LPARAM)index, (WPARAM)Buffer);
+						SetWindowText(hwnd, Buffer);
+						break;
+						
+					}
+					
+				}
+				break;
+			}
+			case IDC_CHECKBOX_POKETALK: 
 			{
-				//sets the window title as the selected item
-				char Buffer[256];
-				int index = SendMessage((HWND)lparam, LB_GETCARETINDEX, 0, 0);	
-
-				SendMessage((HWND)lparam, LB_GETTEXT, (LPARAM)index, (WPARAM)Buffer);
-				SetWindowText(hwnd, Buffer);
+				//checks checkbox
+				BOOL checked = IsDlgButtonChecked(hwnd, IDC_CHECKBOX_POKETALK);
+				if (checked) {
+					CheckDlgButton(hwnd, IDC_CHECKBOX_POKETALK, BST_UNCHECKED);
+					SetWindowText(hwnd, TEXT(""));
+				}
+				else {
+					CheckDlgButton(hwnd, IDC_CHECKBOX_POKETALK, BST_CHECKED);
+					SetWindowText(hwnd, TEXT("Check Box"));
+				}
+				break;
 			}
-			}
-		}
-
+				
 		break;
 
 		}
 
 		return 0;
 	}
-		break;
-
+	break;
 
 	case WM_DESTROY:
 	{
@@ -158,7 +183,7 @@ bool Window::init()
 	}
 
 	//creation of the window
-	m_hwnd=::CreateWindowEx(WS_EX_OVERLAPPEDWINDOW, "MyWindowClass", "Epic plugin", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, NULL, NULL);
+	m_hwnd=::CreateWindowEx(WS_EX_OVERLAPPEDWINDOW, "MyWindowClass", "Epic plugin", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, NULL, NULL);
 
 
 
@@ -221,7 +246,6 @@ int Window::updateUserDetails(UserObj client[], int lastvalue)
 }
 
 
-
 bool Window::release()
 {
 	//Destroy the window
@@ -246,16 +270,14 @@ Window::~Window()
 
 }
 
-/*void AddListBoxItems(HWND hWnd) {
-	for (int i = 0; userIds[i]; i++)
-	{
-		SendMessage(GetDlgItem(hWnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)userIds[i]);
-	}
-}*/
-
 void AddControls(HWND hWnd)
 {
 	rightHwnd = hWnd;
-	CreateWindowW(L"Button", L"Click Me", WS_VISIBLE | WS_CHILD, 600, 100, 100, 50, hWnd, NULL, NULL, NULL);
-	
+	CreateWindowW(L"Button", L"Click Me", WS_VISIBLE | WS_CHILD, 320, 100, 100, 50, hWnd, NULL, NULL, NULL);	
+	CreateWindow("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | LBS_STANDARD | LBS_NOTIFY,
+		440, 10, 300, 600,
+		hWnd,
+		(HMENU)IDC_LISTBOXACTIVE_TEXT,
+		(HINSTANCE)GetWindowLong
+		(hWnd, GWLP_HINSTANCE), NULL);
 }
