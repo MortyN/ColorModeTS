@@ -1,4 +1,5 @@
 #pragma once
+#define ISOLATION_AWARE_ENABLED 1
 #include "Window.h"
 
 class AppWindow: public Window

@@ -1,7 +1,11 @@
 #pragma once
-
+#define ISOLATION_AWARE_ENABLED 1
 #include <Windows.h>
+
 #include "UserObj.h"
+
+
+
 
 class Window
 {

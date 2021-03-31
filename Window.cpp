@@ -1,4 +1,6 @@
 #include "Window.h"
+#include <commctrl.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -13,11 +15,14 @@
 #include "UserObj.h"
 #include "AppWindow.h"
 
-//defining the wparam values for the msg switch-case
-#define IDI_ICON         101
+
+//defining the wparam values for the msg switch-case, used to see what is clicked in the mainwindow
+#define IDI_ICON 101
 #define IDC_LISTBOX_TEXT 1000
 #define IDC_CHECKBOX_POKETALK 1001
 #define IDC_LISTBOXACTIVE_TEXT 1002
+#define IDC_BUTTON_ADDLIST 1003
+#define IDC_BUTTON_DELETELIST 1004
 
 Window* window = nullptr;
 Window::Window()
@@ -27,53 +32,65 @@ Window::Window()
 void AddControls(HWND);
 void UpdateList(HWND);
 HWND rightHwnd;
-HWND hWndListBox;
+HWND hWndListBox;	
 AppWindow app;
 
-
-/*std::string tsUser[];*/
 int lastUser;
-int userIds[30] = {};
-char *userNames[30] = {};
 bool isWinRun = false;
+char selectedUser;
+char Buffer[256];
 
-struct UserObj winUserList[30];
+struct UserObj winUserList[50];
+struct UserObj selUserList[50];
+
+//windows visual styling, does not include fonts
+#pragma comment(linker,"\"/manifestdependency:type='win32' \
+name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
+processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+
+//Initializes ui font on all items
+BOOL CALLBACK EnumChildProc(HWND hWnd, LPARAM lParam)
+{
+	HFONT hfDefault = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+	SendMessage(hWnd, WM_SETFONT, (WPARAM)hfDefault, MAKELPARAM(TRUE, 0));
+	return TRUE;
+}
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 {
-	/*int arrSize = *(&tsUser + 1) - tsUser;*/
 	switch (msg)
 	{
+	//Event fired when window is created
 	case WM_CREATE:
 	{
-		//Event fired when window is created
-		
+
 		window->onCreate();
 		AddControls(hwnd);
 
 		hWndListBox = CreateWindow("LISTBOX",NULL,WS_VISIBLE | WS_CHILD | LBS_STANDARD | LBS_NOTIFY,
-			10,10,300,600,
+			10,50,300,400,
 			hwnd,
 			(HMENU)IDC_LISTBOX_TEXT,
 			(HINSTANCE)GetWindowLong
 			(hwnd, GWLP_HINSTANCE),NULL);
 
+		
+
 		//creates checkbox
 		CreateWindow(TEXT("button"), TEXT("Activate Poke on Talk"),
 			WS_VISIBLE | WS_CHILD | BS_CHECKBOX,
-			700, 20, 185, 35,
+			750, 20, 185, 35,
 			hwnd, (HMENU)IDC_CHECKBOX_POKETALK, ((LPCREATESTRUCT)lparam)->hInstance, NULL);
 
-		//
-
 		//adds clientnames to listbox window
-
 		for (int i = 0; i < lastUser ; i++)
 		{
 			printf("username LIST: %s", winUserList[i].username);
 			SendMessage(GetDlgItem(hwnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)winUserList[i].username);
 		}
+
 		break;
+
 	}
 
 	case WM_COMMAND:
@@ -88,9 +105,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 					case LBN_SELCHANGE:
 					{
 						//sets the window title as the selected item
-						char Buffer[256];
+						
 						int index = SendMessage((HWND)lparam, LB_GETCARETINDEX, 0, 0);	
-
 						SendMessage((HWND)lparam, LB_GETTEXT, (LPARAM)index, (WPARAM)Buffer);
 						SetWindowText(hwnd, Buffer);
 						break;
@@ -102,7 +118,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 			}
 			case IDC_CHECKBOX_POKETALK: 
 			{
-				//checks checkbox
+				//visually activates checkbox mark
 				BOOL checked = IsDlgButtonChecked(hwnd, IDC_CHECKBOX_POKETALK);
 				if (checked) {
 					CheckDlgButton(hwnd, IDC_CHECKBOX_POKETALK, BST_UNCHECKED);
@@ -114,11 +130,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 				}
 				break;
 			}
-				
+			case IDC_BUTTON_ADDLIST:
+			{
+				if (Buffer[0] != 0) {
+					printf("BUTTON CLICKED");
+
+					printf("BUTTON NAME: %s", Buffer);
+
+					SendMessage(GetDlgItem(hwnd, IDC_LISTBOXACTIVE_TEXT), LB_ADDSTRING, 0, (LPARAM)Buffer);
+					Buffer[0] = '\0';
+					::UpdateWindow(hwnd);
+				}	
+				break;
+			}
+			case IDC_BUTTON_DELETELIST:
+			{
+				SendMessage(GetDlgItem(hwnd, IDC_LISTBOXACTIVE_TEXT), LB_RESETCONTENT, 0, 0);
+				::UpdateWindow(hWndListBox);
+				break;
+			}
+
 		break;
-
 		}
-
 		return 0;
 	}
 	break;
@@ -158,6 +191,8 @@ int Window::getUserDetails(UserObj client[], int lastvalue)
 	return 0;
 }
 
+//(HBRUSH)GetStockObject(WHITE_BRUSH)
+
 bool Window::init()
 {
 	WNDCLASSEX wc;
@@ -173,8 +208,7 @@ bool Window::init()
 	wc.style = NULL;
 	wc.lpfnWndProc = &WndProc;
 
-
-	if (!::RegisterClassEx(&wc)) { //if the registration of calss will fail, the function will return false
+	if (!::RegisterClassEx(&wc)) { //if the registration of calls will fail, the function will return false
 		return false;
 	}
 
@@ -192,8 +226,9 @@ bool Window::init()
 		return false;
 }
 	//show window
-
 	::ShowWindow(m_hwnd, SW_SHOW);
+	//runs the font initialization
+	EnumChildWindows(m_hwnd, EnumChildProc, 0);
 	::UpdateWindow(m_hwnd);
 
 	
@@ -270,14 +305,21 @@ Window::~Window()
 
 }
 
+//adding additional ui elements like buttons and lists
 void AddControls(HWND hWnd)
 {
 	rightHwnd = hWnd;
-	CreateWindowW(L"Button", L"Click Me", WS_VISIBLE | WS_CHILD, 320, 100, 100, 50, hWnd, NULL, NULL, NULL);	
+	CreateWindow(TEXT("BUTTON"), TEXT("Add To List"), WS_CHILD | WS_VISIBLE, 320, 200, 100, 50, hWnd, (HMENU)IDC_BUTTON_ADDLIST, NULL, NULL);
+	CreateWindow(TEXT("BUTTON"), TEXT("Empty List"), WS_CHILD | WS_VISIBLE, 320, 320, 100, 50, hWnd, (HMENU)IDC_BUTTON_DELETELIST, NULL, NULL);
+
 	CreateWindow("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | LBS_STANDARD | LBS_NOTIFY,
-		440, 10, 300, 600,
+		440, 50, 300, 400,
 		hWnd,
 		(HMENU)IDC_LISTBOXACTIVE_TEXT,
 		(HINSTANCE)GetWindowLong
 		(hWnd, GWLP_HINSTANCE), NULL);
+
+	CreateWindow(TEXT("static"), TEXT("Current Channellist:"), WS_VISIBLE | WS_CHILD, 16, 16, 490, 25, hWnd, (HMENU)3, NULL, NULL);
+	CreateWindow(TEXT("static"), TEXT("List of Selected Users:"), WS_VISIBLE | WS_CHILD, 450, 16, 490, 25, hWnd, (HMENU)3, NULL, NULL);
+
 }

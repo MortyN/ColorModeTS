@@ -6,12 +6,15 @@
 
 #if defined(WIN32) || defined(__WIN32__) || defined(_WIN32)
 #pragma warning (disable : 4100)  /* Disable Unreferenced parameter warning */
+#define ISOLATION_AWARE_ENABLED 1
 #include <Windows.h>
 
 #include "AppWindow.h"
 
 
 #endif
+
+#define ISOLATION_AWARE_ENABLED 1
 
 #include <stdio.h>
 #include <cstdlib>
@@ -827,7 +830,7 @@ void ts3plugin_onClientMoveEvent(uint64 serverConnectionHandlerID, anyID clientI
 		int userAmount = 0;
 		int i = 0;
 
-		struct UserObj arr[30] = { 0 };
+		struct UserObj arr[50] = { 0 };
 
 		if (ts3Functions.getChannelClientList(serverConnectionHandlerID, myChannelID, &clientIDs) != ERROR_ok) {
 			ts3Functions.logMessage("Error querying client ID arr", LogLevel_ERROR, "Plugin", serverConnectionHandlerID);
