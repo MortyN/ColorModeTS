@@ -15,7 +15,6 @@
 #include "UserObj.h"
 #include "AppWindow.h"
 
-
 //defining the wparam values for the msg switch-case, used to see what is clicked in the mainwindow
 #define IDI_ICON 101
 #define IDC_LISTBOX_TEXT 1000
@@ -31,14 +30,18 @@ Window::Window()
 }
 void AddControls(HWND);
 void UpdateList(HWND);
+
 HWND rightHwnd;
 HWND hWndListBox;	
 AppWindow app;
 
+plugin* ts3plugin;
+
 int lastUser;
 bool isWinRun = false;
-char selectedUser;
+char *selectedUser[50];
 char Buffer[256];
+int selUserAmount = 0;
 
 struct UserObj winUserList[50];
 struct UserObj selUserList[50];
@@ -127,18 +130,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 				else {
 					CheckDlgButton(hwnd, IDC_CHECKBOX_POKETALK, BST_CHECKED);
 					SetWindowText(hwnd, TEXT("Check Box"));
+					//send clientinfo to plugin.cpp
 				}
 				break;
 			}
 			case IDC_BUTTON_ADDLIST:
 			{
 				if (Buffer[0] != 0) {
-					printf("BUTTON CLICKED");
-
-					printf("BUTTON NAME: %s", Buffer);
 
 					SendMessage(GetDlgItem(hwnd, IDC_LISTBOXACTIVE_TEXT), LB_ADDSTRING, 0, (LPARAM)Buffer);
+					
+
+					for (int i = 0; i < lastUser; i++)
+					{
+						printf("winuser: %s buffer: %s \n", winUserList[i].username, Buffer);
+						if (strcmp(winUserList[i].username, Buffer) == 0) {
+							printf("MATCH");
+							selUserList[selUserAmount] = winUserList[i];
+							ts3plugin->userlistActions(selUserList, selUserAmount);
+							break;
+						}							
+					}
 					Buffer[0] = '\0';
+					selUserAmount++;
 					::UpdateWindow(hwnd);
 				}	
 				break;
@@ -146,6 +160,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 			case IDC_BUTTON_DELETELIST:
 			{
 				SendMessage(GetDlgItem(hwnd, IDC_LISTBOXACTIVE_TEXT), LB_RESETCONTENT, 0, 0);
+				selUserAmount = 0;
 				::UpdateWindow(hWndListBox);
 				break;
 			}
@@ -191,7 +206,7 @@ int Window::getUserDetails(UserObj client[], int lastvalue)
 	return 0;
 }
 
-//(HBRUSH)GetStockObject(WHITE_BRUSH)
+//(HBRUSH)GetStockObject(WHITE_BRUSH); white background
 
 bool Window::init()
 {
@@ -217,7 +232,7 @@ bool Window::init()
 	}
 
 	//creation of the window
-	m_hwnd=::CreateWindowEx(WS_EX_OVERLAPPEDWINDOW, "MyWindowClass", "Epic plugin", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, NULL, NULL);
+	m_hwnd=::CreateWindowEx(WS_EX_OVERLAPPEDWINDOW, "MyWindowClass", "The Annoyinator", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, NULL, NULL);
 
 
 
@@ -305,9 +320,11 @@ Window::~Window()
 
 }
 
+
 //adding additional ui elements like buttons and lists
 void AddControls(HWND hWnd)
 {
+
 	rightHwnd = hWnd;
 	CreateWindow(TEXT("BUTTON"), TEXT("Add To List"), WS_CHILD | WS_VISIBLE, 320, 200, 100, 50, hWnd, (HMENU)IDC_BUTTON_ADDLIST, NULL, NULL);
 	CreateWindow(TEXT("BUTTON"), TEXT("Empty List"), WS_CHILD | WS_VISIBLE, 320, 320, 100, 50, hWnd, (HMENU)IDC_BUTTON_DELETELIST, NULL, NULL);

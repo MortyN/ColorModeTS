@@ -16,6 +16,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+	class plugin {
+	public:
+		int userlistActions(UserObj userlist[], int amount);
+	};
 
 	/* Required functions */
 	PLUGINS_EXPORTDLL const char* ts3plugin_name();

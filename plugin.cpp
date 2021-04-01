@@ -32,13 +32,11 @@
 #include "ts3_functions.h"
 #include "plugin.h"
 #include "UserObj.h"
-
 #include "AppWindow.h"
 
 
-
-
 static struct TS3Functions ts3Functions;
+
 
 #ifdef _WIN32
 #define _strcpy(dest, destSize, src) strcpy_s(dest, destSize, src)
@@ -60,6 +58,9 @@ static struct TS3Functions ts3Functions;
 
 static char* pluginID = NULL;
 Window* win;
+
+UserObj selClients[100];
+int selClientAmount;
 
 #ifdef _WIN32
 /* Helper function to convert wchar_T to Utf-8 encoded strings on Windows */
@@ -939,16 +940,28 @@ int ts3plugin_onTextMessageEvent(uint64 serverConnectionHandlerID, anyID targetM
 void ts3plugin_onTalkStatusChangeEvent(uint64 serverConnectionHandlerID, int status, int isReceivedWhisper, anyID clientID) {
 	/* Demonstrate usage of getClientDisplayName */
 	char name[512];
-	if (ts3Functions.getClientDisplayName(serverConnectionHandlerID, clientID, name, 512) == ERROR_ok) {
+	int dId;
+	if (ts3Functions.getClientVariableAsInt(serverConnectionHandlerID, clientID, CLIENT_DATABASE_ID, &dId) == ERROR_ok) {
 		if (status == STATUS_TALKING) {
-			printf("--> %s starts talking\n", name);
-			ts3Functions.logMessage(("--> %s starts talking\n", name), LogLevel_INFO, "EPIC PLUGIN", 0);
 
-			/*ts3Functions.requestClientPoke(serverConnectionHandlerID, clientID, "neger", 0);*/
+			//add separate function example:
+			//void plugin::ts3extfunc(int type, anyID clientID, etc...)
+
+			//list from window.cpp is not correct, first item is shifted
+			if (selClientAmount > 0) {
+				for (int i = 0; i < selClientAmount; i++)
+				{
+					printf("\nClientID: %d selClient: %d ", dId, selClients[i].clientid);
+					if (selClients[i].clientid == dId ) {
+						printf("match!");
+						ts3Functions.requestClientPoke(serverConnectionHandlerID, clientID, "Varstilletakk", 0);
+					}
+					printf("noMatch!");
+				}
+			}	
 		}
 		else {
-			printf("--> %s stops talking\n", name);
-			ts3Functions.logMessage(("--> %s stops talking\n", name), LogLevel_INFO, "EPIC PLUGIN", 0);
+
 		}
 	}
 }
@@ -1266,7 +1279,10 @@ int openwindowss() {
 	return 0;
 }
 
+void userlistActions(UserObj userlist[], int amount) {
+	printf("%s %d", userlist[0].username, userlist[0].clientid);
 
+}
 
 void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenuType type, int menuItemID, uint64 selectedItemID) {
 
@@ -1446,4 +1462,18 @@ const char* ts3plugin_keyPrefix() {
 
 /* Called when client custom nickname changed */
 void ts3plugin_onClientDisplayNameChanged(uint64 serverConnectionHandlerID, anyID clientID, const char* displayName, const char* uniqueClientIdentifier) {
+}
+
+int plugin::userlistActions(UserObj userlist[], int amount)
+{
+	selClientAmount = amount;
+	selClients[selClientAmount] = userlist[selClientAmount];
+
+	for (int i = 0; i < selClientAmount; i++)
+	{
+		printf("Username_PLUGINCPP: %s ID_PLUGINCPP: %d\n", selClients[i].username, selClients[i].clientid);
+	}
+
+
+	return 0;
 }
