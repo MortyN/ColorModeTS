@@ -86,7 +86,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 		//adds clientnames to listbox window
 		for (int i = 0; i < lastUser ; i++)
 		{
-			printf("username LIST: %s", winUserList[i].username);
 			SendMessage(GetDlgItem(hwnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)winUserList[i].username);
 		}
 		break;
@@ -143,7 +142,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 				char customtext[256];
 				GetWindowText(GetDlgItem(hwnd, IDC_POKEINPUT), customtext, 256);
 				ts3plugin->pokeText(customtext);
-				printf("hei %s",customtext);
 				break;
 			}
 
@@ -156,9 +154,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 
 					for (int i = 0; i < lastUser; i++)
 					{
-						printf("winuser: %s buffer: %s \n", winUserList[i].username, Buffer);
 						if (strcmp(winUserList[i].username, Buffer) == 0) {
-							printf("MATCH");
 							selUserList[selUserAmount] = winUserList[i];
 							ts3plugin->userlistActions(selUserList, selUserAmount);
 							break;
@@ -211,7 +207,7 @@ int Window::getUserDetails(UserObj client[], int lastvalue)
 	for (int i = 0; i < lastUser; i++)
 	{
 		winUserList[i] = client[i];
-		printf("UserListITEM!: %s\n", winUserList[i].username);
+		printf("UserListITEM!: %s\n", winUserList[i].username); //removing this makes it not work???
 	}
 	//starts the annoyinator (application window)
 	if (app.init())
@@ -220,7 +216,6 @@ int Window::getUserDetails(UserObj client[], int lastvalue)
 			app.broadcast();
 		}
 	}
-	printf("closed");
 	return 0;
 }
 
@@ -237,12 +232,12 @@ std::string curTime()
 int Window::logUserPoked(char *clientName)
 {
 	std::string logmessage;
-	printf("hei %s", clientName);
 	std::string action = " Got Poked!";
 	logmessage = curTime() + clientName + action;
 	
 
 	SendMessage(GetDlgItem(rightHwnd, IDC_LISTBOX_LOGGING), LB_ADDSTRING, 0, (LPARAM)logmessage.c_str());
+	//scrolls to bottom automatically
 	SendMessage(GetDlgItem(rightHwnd, IDC_LISTBOX_LOGGING), WM_VSCROLL, SB_BOTTOM, 0L);
 
 	::UpdateWindow(rightHwnd);
@@ -325,9 +320,8 @@ int Window::updateUserDetails(UserObj client[], int lastvalue)
 		for (int i = 0; i < lastUser; i++)
 		{
 			winUserList[i] = client[i];
-			printf("UPDATED LIST!: %s\n", winUserList[i].username);
 		}
-		SendMessage(hWndListBox, LB_RESETCONTENT, 0, 0);
+		SendMessage(GetDlgItem(rightHwnd, IDC_LISTBOX_TEXT), LB_RESETCONTENT, 0, 0);
 		for (int i = 0; i < lastUser; i++)
 		{
 			SendMessage(GetDlgItem(rightHwnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)client[i].username);
