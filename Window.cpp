@@ -230,7 +230,7 @@ std::string curTime()
 	auto in_time_t = std::chrono::system_clock::to_time_t(now);
 
 	std::stringstream ss;
-	ss << std::put_time(std::localtime(&in_time_t), "%X : ");
+	ss << std::put_time(std::localtime(&in_time_t), " %X : ");
 	return ss.str();
 }
 
@@ -238,10 +238,13 @@ int Window::logUserPoked(char *clientName)
 {
 	std::string logmessage;
 	printf("hei %s", clientName);
-
-	logmessage = curTime() + clientName;
+	std::string action = " Got Poked!";
+	logmessage = curTime() + clientName + action;
+	
 
 	SendMessage(GetDlgItem(rightHwnd, IDC_LISTBOX_LOGGING), LB_ADDSTRING, 0, (LPARAM)logmessage.c_str());
+	SendMessage(GetDlgItem(rightHwnd, IDC_LISTBOX_LOGGING), WM_VSCROLL, SB_BOTTOM, 0L);
+
 	::UpdateWindow(rightHwnd);
 	return 0;
 }
