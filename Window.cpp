@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
+#include <chrono>  // chrono::system_clock
+#include <ctime>   // localtime
+#include <sstream> // stringstream
+#include <iomanip> // put_time
 #include "teamspeak/public_errors.h"
 #include "teamspeak/public_errors_rare.h"
 #include "teamspeak/public_definitions.h"
@@ -24,6 +28,8 @@
 #define IDC_BUTTON_DELETELIST 1004
 #define IDC_POKEINPUT 1005
 #define IDC_BUTTON_APPLYCUSTOMTEXT 1006
+#define IDC_GRPFUNCTIONS 1007
+#define IDC_LISTBOX_LOGGING 1008
 
 //functionality for the application, numbers for switch case ease
 #define FUNC_POKETALK 3000
@@ -76,13 +82,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 	{
 		window->onCreate();
 		AddControls(hwnd);
-
-		hWndListBox = CreateWindow("LISTBOX",NULL,WS_VISIBLE | WS_CHILD | LBS_STANDARD | LBS_NOTIFY,
-			10,50,300,400,
-			hwnd,
-			(HMENU)IDC_LISTBOX_TEXT,
-			(HINSTANCE)GetWindowLong
-			(hwnd, GWLP_HINSTANCE),NULL);
 
 		//adds clientnames to listbox window
 		for (int i = 0; i < lastUser ; i++)
@@ -188,13 +187,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 	}
 	break;
 
-	case WM_DESTROY:
+	case WM_CLOSE:
+		ShowWindow(hwnd, SW_HIDE);
+		break;
+
+	/*case WM_DESTROY:
 	{
+
 		//event fired when window is destroyed
 		window->onDestroy();
 		::PostQuitMessage(0);
 		break;
-	}
+	}*/
 	default:
 		return ::DefWindowProc(hwnd, msg, wparam, lparam);
 	}
@@ -203,7 +207,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 int Window::getUserDetails(UserObj client[], int lastvalue)
 {
 	lastUser = lastvalue;
-
+	ShowWindow(rightHwnd, SW_SHOW);
 	for (int i = 0; i < lastUser; i++)
 	{
 		winUserList[i] = client[i];
@@ -217,6 +221,28 @@ int Window::getUserDetails(UserObj client[], int lastvalue)
 		}
 	}
 	printf("closed");
+	return 0;
+}
+
+std::string curTime()
+{
+	auto now = std::chrono::system_clock::now();
+	auto in_time_t = std::chrono::system_clock::to_time_t(now);
+
+	std::stringstream ss;
+	ss << std::put_time(std::localtime(&in_time_t), "%X : ");
+	return ss.str();
+}
+
+int Window::logUserPoked(char *clientName)
+{
+	std::string logmessage;
+	printf("hei %s", clientName);
+
+	logmessage = curTime() + clientName;
+
+	SendMessage(GetDlgItem(rightHwnd, IDC_LISTBOX_LOGGING), LB_ADDSTRING, 0, (LPARAM)logmessage.c_str());
+	::UpdateWindow(rightHwnd);
 	return 0;
 }
 
@@ -246,7 +272,7 @@ bool Window::init()
 	}
 
 	//creation of the window
-	m_hwnd=::CreateWindowEx(WS_EX_OVERLAPPEDWINDOW, "MyWindowClass", "The Annoyinator", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 768, NULL, NULL, NULL, NULL);
+	m_hwnd=::CreateWindowEx(WS_EX_OVERLAPPEDWINDOW, "MyWindowClass", "The Annoyinator", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME, CW_USEDEFAULT, CW_USEDEFAULT, 1000, 738, NULL, NULL, NULL, NULL);
 
 
 
@@ -338,32 +364,59 @@ void AddControls(HWND hWnd)
 {
 
 	rightHwnd = hWnd;
-	CreateWindow(TEXT("BUTTON"), TEXT("Add To List"), WS_CHILD | WS_VISIBLE, 320, 200, 100, 50, hWnd, (HMENU)IDC_BUTTON_ADDLIST, NULL, NULL);
-	CreateWindow(TEXT("BUTTON"), TEXT("Empty List"), WS_CHILD | WS_VISIBLE, 320, 320, 100, 50, hWnd, (HMENU)IDC_BUTTON_DELETELIST, NULL, NULL);
+	CreateWindow(TEXT("BUTTON"), TEXT("Add To List"), WS_CHILD | WS_VISIBLE, 320, 150, 100, 50, hWnd, (HMENU)IDC_BUTTON_ADDLIST, NULL, NULL);
+	CreateWindow(TEXT("BUTTON"), TEXT("Empty List"), WS_CHILD | WS_VISIBLE, 320, 250, 100, 50, hWnd, (HMENU)IDC_BUTTON_DELETELIST, NULL, NULL);
+
+	//Text above listboxes
+	CreateWindow(TEXT("static"), TEXT("Current Channellist:"), WS_VISIBLE | WS_CHILD, 16, 16, 490, 25, hWnd, (HMENU)3, NULL, NULL);
+	CreateWindow(TEXT("static"), TEXT("List of Selected Users:"), WS_VISIBLE | WS_CHILD, 436, 16, 490, 25, hWnd, (HMENU)3, NULL, NULL);
 
 	CreateWindow("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | LBS_STANDARD | LBS_NOTIFY,
-		440, 50, 300, 400, hWnd,
+		430, 40, 300, 400, hWnd,
 		(HMENU)IDC_LISTBOXACTIVE_TEXT,
+		(HINSTANCE)GetWindowLong
+		(hWnd, GWLP_HINSTANCE), NULL);
+
+	CreateWindow("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | LBS_STANDARD | LBS_NOTIFY,
+		10, 40, 300, 400,
+		hWnd,
+		(HMENU)IDC_LISTBOX_TEXT,
 		(HINSTANCE)GetWindowLong
 		(hWnd, GWLP_HINSTANCE), NULL);
 
 	//creates checkbox
 	CreateWindow(TEXT("button"), TEXT("Activate Poke on Talk"),
 		WS_VISIBLE | WS_CHILD | BS_CHECKBOX,
-		750, 55, 185, 17,
+		760, 55, 185, 17,
 		hWnd, (HMENU)IDC_CHECKBOX_POKETALK, (HINSTANCE)GetWindowLong, NULL);
 
-	CreateWindow(TEXT("static"), TEXT("Enter text to poke with:"), WS_VISIBLE | WS_CHILD, 750, 77, 490, 25, hWnd, (HMENU)3, NULL, NULL);
-	CreateWindow(TEXT("EDIT"), TEXT(""), 
-		WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL | ES_WANTRETURN, 
-		750, 100, 100, 23, hWnd, (HMENU)IDC_POKEINPUT, (HINSTANCE)GetWindowLong, 0);
+	CreateWindow(TEXT("static"), TEXT("Enter text to poke with:"), WS_VISIBLE | WS_CHILD, 760, 77, 490, 25, hWnd, (HMENU)3, NULL, NULL);
+	CreateWindow(TEXT("EDIT"), TEXT(""),
+		WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL | ES_WANTRETURN,
+		760, 100, 100, 23, hWnd, (HMENU)IDC_POKEINPUT, (HINSTANCE)GetWindowLong, 0);
 
-	CreateWindow(TEXT("BUTTON"), TEXT("Apply"), WS_CHILD | WS_VISIBLE, 855, 100, 75, 23, hWnd, (HMENU)IDC_BUTTON_APPLYCUSTOMTEXT, NULL, NULL);
+	CreateWindow(TEXT("BUTTON"), TEXT("Apply"), WS_CHILD | WS_VISIBLE, 865, 100, 75, 23, hWnd, (HMENU)IDC_BUTTON_APPLYCUSTOMTEXT, NULL, NULL);
+
 	
-	//Text above listboxes
-	CreateWindow(TEXT("static"), TEXT("Current Channellist:"), WS_VISIBLE | WS_CHILD, 16, 16, 490, 25, hWnd, (HMENU)3, NULL, NULL);
-	CreateWindow(TEXT("static"), TEXT("List of Selected Users:"), WS_VISIBLE | WS_CHILD, 450, 16, 490, 25, hWnd, (HMENU)3, NULL, NULL);
+	//visual groupbox functions
+	CreateWindowEx(WS_EX_WINDOWEDGE,
+		TEXT("BUTTON"),
+		TEXT("Activate functions:"),
+		WS_VISIBLE | WS_CHILD | BS_GROUPBOX,// <----BS_GROUPBOX does nothing on the grouping 
+		750, 40,
+		200, 300,
+		hWnd,
+		(HMENU)IDC_GRPFUNCTIONS,
+		(HINSTANCE)GetWindowLong, NULL);
 
+	//logging window
+	CreateWindow(TEXT("static"), TEXT("Log:"), WS_VISIBLE | WS_CHILD, 16, 480, 490, 25, hWnd, (HMENU)3, NULL, NULL);
+	CreateWindow("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | LBS_STANDARD | LBS_NOTIFY,
+		10, 500, 500, 200,
+		hWnd,
+		(HMENU)IDC_LISTBOX_LOGGING,
+		(HINSTANCE)GetWindowLong
+		(hWnd, GWLP_HINSTANCE), NULL);
 
 	EnableWindow(GetDlgItem(hWnd, IDC_POKEINPUT), false);
 	EnableWindow(GetDlgItem(hWnd, IDC_BUTTON_APPLYCUSTOMTEXT), false);

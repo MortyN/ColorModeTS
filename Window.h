@@ -15,9 +15,9 @@ public:
 	Window();
 	//init window
 	bool init();
-	int sendUserList(char* selClientArr[], UserObj curList[], int amount, LPARAM lparam);
 	bool broadcast();
 	int getUserDetails(UserObj client[], int lastvalue);
+	int logUserPoked(char *clientName);
 	int updateUserDetails(UserObj client[], int lastvalue);
 	//release window
 	bool release();

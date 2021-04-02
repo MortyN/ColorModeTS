@@ -952,6 +952,7 @@ void ts3plugin_onTalkStatusChangeEvent(uint64 serverConnectionHandlerID, int sta
 	/* Demonstrate usage of getClientDisplayName */
 	char name[512];
 	int dbId;
+	char *str;
 	if (ts3Functions.getClientVariableAsInt(serverConnectionHandlerID, clientID, CLIENT_DATABASE_ID, &dbId) == ERROR_ok) {
 		if (status == STATUS_TALKING) {
 
@@ -964,8 +965,13 @@ void ts3plugin_onTalkStatusChangeEvent(uint64 serverConnectionHandlerID, int sta
 				{
 					printf("\nClientID: %d selClient: %d ", dbId, selClients[i].clientid);
 					if (selClients[i].clientid == dbId ) {
+						if (ts3Functions.getClientVariableAsString(serverConnectionHandlerID, clientID, CLIENT_NICKNAME, &str) != ERROR_ok) {
+							printf("Error getting client nickname\n");
+							return;
+						}
 						printf("match!");
 						ts3Functions.requestClientPoke(serverConnectionHandlerID, clientID, pokeStr.c_str(), 0);
+						win->logUserPoked(str);
 					}
 					printf("noMatch!");
 				}
@@ -1228,29 +1234,6 @@ void ts3plugin_onAvatarUpdated(uint64 serverConnectionHandlerID, anyID clientID,
  * - selectedItemID: Channel or Client ID in the case of PLUGIN_MENU_TYPE_CHANNEL and PLUGIN_MENU_TYPE_CLIENT. 0 for PLUGIN_MENU_TYPE_GLOBAL.
  */
 
-/*
-FILE* pfile;
-char fileData[200], letter;
-int ind;
-
-void storeData();
-pfile = fopen("C:\\Users\\morte\\AppData\\Roaming\\TS3Client\\plugins\\LxBTSC\\template\\textfile.txt", "r");
-int main()
-{
-	storeData();
-	printf("Data From File:\n");
-	printf("%s", fileData);
-	return 0;
-}
-
-void storeData()
-{
-
-	
-
-}
-fprintf(file, "%s", overWrite);
-*/
 						
 int DisplayResourceNAMessageBox(int darklight) {
 	char message[200];
@@ -1284,9 +1267,6 @@ int DisplayResourceNAMessageBox(int darklight) {
 }
 
 int openwindowss() {
-	
-
-	
 	return 0;
 }
 
@@ -1317,10 +1297,7 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 	char* str;
 	int userAmount = 0;
 	int i = 0;
-	
 	struct UserObj arr[30] = {0};
-
-
 
 	for (i = 0; clientIDs[i]; i++)
 	{
@@ -1334,12 +1311,8 @@ void ts3plugin_onMenuItemEvent(uint64 serverConnectionHandlerID, enum PluginMenu
 		}
 		else {
 			userNames[i] = str;
-			//printf("UserName: %s %d\n", userNames[i], cId[i]);			
-
 			arr[i].clientid = cId[i];
 			arr[i].username = str;
-
-			printf("ID = %d NAME = %s\n", arr[i].clientid, arr[i].username);
 			userAmount++;
 		}
 
