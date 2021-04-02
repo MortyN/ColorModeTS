@@ -19,6 +19,8 @@ extern "C" {
 	class plugin {
 	public:
 		int userlistActions(UserObj userlist[], int amount);
+		int funcIsActivated(bool boolean, int type);
+		int pokeText(std::string string);
 	};
 
 	/* Required functions */

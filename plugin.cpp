@@ -56,11 +56,22 @@ static struct TS3Functions ts3Functions;
 #define CHANNELINFO_BUFSIZE 512
 #define RETURNCODE_BUFSIZE 128
 
+//custom functions from window.cpp
+
+#define FUNC_POKETALK 3000
+
+
 static char* pluginID = NULL;
 Window* win;
 
 UserObj selClients[100];
-int selClientAmount;
+int selClientAmount = -1;
+
+std::string pokeStr;
+
+//function booleans
+bool poketalk = false;
+
 
 #ifdef _WIN32
 /* Helper function to convert wchar_T to Utf-8 encoded strings on Windows */
@@ -940,21 +951,21 @@ int ts3plugin_onTextMessageEvent(uint64 serverConnectionHandlerID, anyID targetM
 void ts3plugin_onTalkStatusChangeEvent(uint64 serverConnectionHandlerID, int status, int isReceivedWhisper, anyID clientID) {
 	/* Demonstrate usage of getClientDisplayName */
 	char name[512];
-	int dId;
-	if (ts3Functions.getClientVariableAsInt(serverConnectionHandlerID, clientID, CLIENT_DATABASE_ID, &dId) == ERROR_ok) {
+	int dbId;
+	if (ts3Functions.getClientVariableAsInt(serverConnectionHandlerID, clientID, CLIENT_DATABASE_ID, &dbId) == ERROR_ok) {
 		if (status == STATUS_TALKING) {
 
 			//add separate function example:
 			//void plugin::ts3extfunc(int type, anyID clientID, etc...)
 
 			//list from window.cpp is not correct, first item is shifted
-			if (selClientAmount > 0) {
-				for (int i = 0; i < selClientAmount; i++)
+			if (selClientAmount >= 0 & poketalk) {
+				for (int i = 0; i < selClientAmount +1; i++)
 				{
-					printf("\nClientID: %d selClient: %d ", dId, selClients[i].clientid);
-					if (selClients[i].clientid == dId ) {
+					printf("\nClientID: %d selClient: %d ", dbId, selClients[i].clientid);
+					if (selClients[i].clientid == dbId ) {
 						printf("match!");
-						ts3Functions.requestClientPoke(serverConnectionHandlerID, clientID, "Varstilletakk", 0);
+						ts3Functions.requestClientPoke(serverConnectionHandlerID, clientID, pokeStr.c_str(), 0);
 					}
 					printf("noMatch!");
 				}
@@ -1475,5 +1486,22 @@ int plugin::userlistActions(UserObj userlist[], int amount)
 	}
 
 
+	return 0;
+}
+
+int plugin::funcIsActivated(bool boolean, int type)
+{
+	switch (type) {
+		case(FUNC_POKETALK):
+		{
+			poketalk = boolean;
+		}
+	}
+	return 0;
+}
+
+int plugin::pokeText(std::string string)
+{
+	pokeStr = string;
 	return 0;
 }

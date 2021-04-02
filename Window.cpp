@@ -22,6 +22,11 @@
 #define IDC_LISTBOXACTIVE_TEXT 1002
 #define IDC_BUTTON_ADDLIST 1003
 #define IDC_BUTTON_DELETELIST 1004
+#define IDC_POKEINPUT 1005
+#define IDC_BUTTON_APPLYCUSTOMTEXT 1006
+
+//functionality for the application, numbers for switch case ease
+#define FUNC_POKETALK 3000
 
 Window* window = nullptr;
 Window::Window()
@@ -39,12 +44,15 @@ plugin* ts3plugin;
 
 int lastUser;
 bool isWinRun = false;
-char *selectedUser[50];
 char Buffer[256];
+char pokeTextBuf[256];
+bool pokeActivated = false;
 int selUserAmount = 0;
 
 struct UserObj winUserList[50];
 struct UserObj selUserList[50];
+struct UserObj emptylist[50];
+
 
 //windows visual styling, does not include fonts
 #pragma comment(linker,"\"/manifestdependency:type='win32' \
@@ -66,7 +74,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 	//Event fired when window is created
 	case WM_CREATE:
 	{
-
 		window->onCreate();
 		AddControls(hwnd);
 
@@ -77,23 +84,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 			(HINSTANCE)GetWindowLong
 			(hwnd, GWLP_HINSTANCE),NULL);
 
-		
-
-		//creates checkbox
-		CreateWindow(TEXT("button"), TEXT("Activate Poke on Talk"),
-			WS_VISIBLE | WS_CHILD | BS_CHECKBOX,
-			750, 20, 185, 35,
-			hwnd, (HMENU)IDC_CHECKBOX_POKETALK, ((LPCREATESTRUCT)lparam)->hInstance, NULL);
-
 		//adds clientnames to listbox window
 		for (int i = 0; i < lastUser ; i++)
 		{
 			printf("username LIST: %s", winUserList[i].username);
 			SendMessage(GetDlgItem(hwnd, IDC_LISTBOX_TEXT), LB_ADDSTRING, 0, (LPARAM)winUserList[i].username);
 		}
-
 		break;
-
 	}
 
 	case WM_COMMAND:
@@ -101,8 +98,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 		switch (LOWORD(wparam))
 		{
 			case IDC_LISTBOX_TEXT:
-			{
-				
+			{				
 				switch (HIWORD(wparam))
 				{
 					case LBN_SELCHANGE:
@@ -111,7 +107,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 						
 						int index = SendMessage((HWND)lparam, LB_GETCARETINDEX, 0, 0);	
 						SendMessage((HWND)lparam, LB_GETTEXT, (LPARAM)index, (WPARAM)Buffer);
-						SetWindowText(hwnd, Buffer);
+						//SetWindowText(hwnd, Buffer);
 						break;
 						
 					}
@@ -124,16 +120,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 				//visually activates checkbox mark
 				BOOL checked = IsDlgButtonChecked(hwnd, IDC_CHECKBOX_POKETALK);
 				if (checked) {
+					pokeActivated = false;
 					CheckDlgButton(hwnd, IDC_CHECKBOX_POKETALK, BST_UNCHECKED);
-					SetWindowText(hwnd, TEXT(""));
+					ts3plugin->funcIsActivated(pokeActivated, FUNC_POKETALK);
+					EnableWindow(GetDlgItem(hwnd, IDC_BUTTON_APPLYCUSTOMTEXT), false);
+					EnableWindow(GetDlgItem(hwnd, IDC_POKEINPUT), false);
+					::UpdateWindow(hwnd);
 				}
 				else {
+					pokeActivated = true;
+					ts3plugin->funcIsActivated(pokeActivated, FUNC_POKETALK);
 					CheckDlgButton(hwnd, IDC_CHECKBOX_POKETALK, BST_CHECKED);
-					SetWindowText(hwnd, TEXT("Check Box"));
-					//send clientinfo to plugin.cpp
+					EnableWindow(GetDlgItem(hwnd, IDC_BUTTON_APPLYCUSTOMTEXT), true);
+					EnableWindow(GetDlgItem(hwnd, IDC_POKEINPUT), true);
+					::UpdateWindow(hwnd);
+
 				}
 				break;
 			}
+
+			case IDC_BUTTON_APPLYCUSTOMTEXT:
+			{
+				char customtext[256];
+				GetWindowText(GetDlgItem(hwnd, IDC_POKEINPUT), customtext, 256);
+				ts3plugin->pokeText(customtext);
+				printf("hei %s",customtext);
+				break;
+			}
+
 			case IDC_BUTTON_ADDLIST:
 			{
 				if (Buffer[0] != 0) {
@@ -159,11 +173,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg,  WPARAM wparam, LPARAM lparam)
 			}
 			case IDC_BUTTON_DELETELIST:
 			{
+				
 				SendMessage(GetDlgItem(hwnd, IDC_LISTBOXACTIVE_TEXT), LB_RESETCONTENT, 0, 0);
+				ts3plugin->userlistActions(emptylist, -1);
 				selUserAmount = 0;
 				::UpdateWindow(hWndListBox);
 				break;
 			}
+
 
 		break;
 		}
@@ -189,15 +206,12 @@ int Window::getUserDetails(UserObj client[], int lastvalue)
 
 	for (int i = 0; i < lastUser; i++)
 	{
-		
-
 		winUserList[i] = client[i];
 		printf("UserListITEM!: %s\n", winUserList[i].username);
 	}
-	//starts the client
+	//starts the annoyinator (application window)
 	if (app.init())
 	{
-
 		while (app.isRun()) {
 			app.broadcast();
 		}
@@ -295,7 +309,6 @@ int Window::updateUserDetails(UserObj client[], int lastvalue)
 	return 0;
 }
 
-
 bool Window::release()
 {
 	//Destroy the window
@@ -320,7 +333,6 @@ Window::~Window()
 
 }
 
-
 //adding additional ui elements like buttons and lists
 void AddControls(HWND hWnd)
 {
@@ -330,13 +342,30 @@ void AddControls(HWND hWnd)
 	CreateWindow(TEXT("BUTTON"), TEXT("Empty List"), WS_CHILD | WS_VISIBLE, 320, 320, 100, 50, hWnd, (HMENU)IDC_BUTTON_DELETELIST, NULL, NULL);
 
 	CreateWindow("LISTBOX", NULL, WS_VISIBLE | WS_CHILD | LBS_STANDARD | LBS_NOTIFY,
-		440, 50, 300, 400,
-		hWnd,
+		440, 50, 300, 400, hWnd,
 		(HMENU)IDC_LISTBOXACTIVE_TEXT,
 		(HINSTANCE)GetWindowLong
 		(hWnd, GWLP_HINSTANCE), NULL);
 
+	//creates checkbox
+	CreateWindow(TEXT("button"), TEXT("Activate Poke on Talk"),
+		WS_VISIBLE | WS_CHILD | BS_CHECKBOX,
+		750, 55, 185, 17,
+		hWnd, (HMENU)IDC_CHECKBOX_POKETALK, (HINSTANCE)GetWindowLong, NULL);
+
+	CreateWindow(TEXT("static"), TEXT("Enter text to poke with:"), WS_VISIBLE | WS_CHILD, 750, 77, 490, 25, hWnd, (HMENU)3, NULL, NULL);
+	CreateWindow(TEXT("EDIT"), TEXT(""), 
+		WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL | ES_WANTRETURN, 
+		750, 100, 100, 23, hWnd, (HMENU)IDC_POKEINPUT, (HINSTANCE)GetWindowLong, 0);
+
+	CreateWindow(TEXT("BUTTON"), TEXT("Apply"), WS_CHILD | WS_VISIBLE, 855, 100, 75, 23, hWnd, (HMENU)IDC_BUTTON_APPLYCUSTOMTEXT, NULL, NULL);
+	
+	//Text above listboxes
 	CreateWindow(TEXT("static"), TEXT("Current Channellist:"), WS_VISIBLE | WS_CHILD, 16, 16, 490, 25, hWnd, (HMENU)3, NULL, NULL);
 	CreateWindow(TEXT("static"), TEXT("List of Selected Users:"), WS_VISIBLE | WS_CHILD, 450, 16, 490, 25, hWnd, (HMENU)3, NULL, NULL);
+
+
+	EnableWindow(GetDlgItem(hWnd, IDC_POKEINPUT), false);
+	EnableWindow(GetDlgItem(hWnd, IDC_BUTTON_APPLYCUSTOMTEXT), false);
 
 }
